@@ -1,0 +1,31 @@
+[package]
+name = "tourney-dono"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sqlx = { version = "0.6.3", features = [
+    "postgres",
+    "json",
+    "runtime-tokio-rustls",
+    "chrono",
+] }
+chrono = { version = "0.4.26", default-features = false, features = ["serde"] }
+dotenv = "0.15.0"
+tokio = { version = "1", features = ["macros"] }
+axum = "0.6.18"
+axum-macros = "0.3.7"
+tower-http = { version = "0.4.0", features = ["cors", "trace"] }
+serenity = { version = "0.11.6", features = [
+    "cache",
+    "framework",
+    "standard_framework",
+    "rustls_backend",
+] }
+anyhow = "1.0.75"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing-subscriber = "0.3.17"
+tracing = "0.1.37"
