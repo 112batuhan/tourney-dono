@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tokio::task::JoinHandle;
 
 use std::{env, sync::Arc};
 
@@ -113,10 +112,7 @@ impl EventHandler for Handler {
     }
 }
 
-pub async fn initiate_dc_bot(
-    db_instance: Arc<DB>,
-    allowed_users: Vec<u64>,
-) -> Result<JoinHandle<()>> {
+pub async fn initiate_dc_bot(db_instance: Arc<DB>, allowed_users: Vec<u64>) -> Result<()> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     let framework = StandardFramework::new()
@@ -139,12 +135,10 @@ pub async fn initiate_dc_bot(
         data.insert::<AllowedUsersKey>(allowed_users);
     }
 
-    let discord_handle = tokio::spawn(async move {
-        client
-            .start()
-            .await
-            .expect("Error while starting the discord bot client.");
-    });
+    client
+        .start()
+        .await
+        .expect("Error while starting the discord bot client.");
 
-    Ok(discord_handle)
+    Ok(())
 }
