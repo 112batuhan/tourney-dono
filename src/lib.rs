@@ -4,6 +4,7 @@ use sqlx::FromRow;
 
 pub mod db;
 pub mod discord;
+pub mod webserver;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Default)]
 pub struct Donation {

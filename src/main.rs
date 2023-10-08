@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use tourney_dono::{db, discord::DCBot};
+use tourney_dono::db;
+use tourney_dono::discord;
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +15,7 @@ async fn main() {
     let db = Arc::new(db);
 
     let allowed_users = vec![142828565359099905];
-    DCBot::initiate_dc_bot(db.clone(), allowed_users)
+    discord::initiate_dc_bot(db.clone(), allowed_users)
         .await
         .unwrap()
         .await

@@ -113,42 +113,38 @@ impl EventHandler for Handler {
     }
 }
 
-pub struct DCBot;
+pub async fn initiate_dc_bot(
+    db_instance: Arc<DB>,
+    allowed_users: Vec<u64>,
+) -> Result<JoinHandle<()>> {
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
-impl DCBot {
-    pub async fn initiate_dc_bot(
-        db_instance: Arc<DB>,
-        allowed_users: Vec<u64>,
-    ) -> Result<JoinHandle<()>> {
-        let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let framework = StandardFramework::new()
+        .configure(|c| c.prefix("."))
+        .before(before)
+        .group(&COMMAND_GROUP);
 
-        let framework = StandardFramework::new()
-            .configure(|c| c.prefix("."))
-            .before(before)
-            .group(&COMMAND_GROUP);
+    let intents = GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT;
+    let mut client = Client::builder(&token, intents)
+        .framework(framework)
+        .event_handler(Handler)
+        .await
+        .expect("Err creating client");
 
-        let intents = GatewayIntents::GUILD_MESSAGES
-            | GatewayIntents::DIRECT_MESSAGES
-            | GatewayIntents::MESSAGE_CONTENT;
-        let mut client = Client::builder(&token, intents)
-            .framework(framework)
-            .event_handler(Handler)
-            .await
-            .expect("Err creating client");
-
-        {
-            let mut data = client.data.write().await;
-            data.insert::<DbKey>(db_instance);
-            data.insert::<AllowedUsersKey>(allowed_users);
-        }
-
-        let discord_handle = tokio::spawn(async move {
-            client
-                .start()
-                .await
-                .expect("Error while starting the discord bot client.");
-        });
-
-        Ok(discord_handle)
+    {
+        let mut data = client.data.write().await;
+        data.insert::<DbKey>(db_instance);
+        data.insert::<AllowedUsersKey>(allowed_users);
     }
+
+    let discord_handle = tokio::spawn(async move {
+        client
+            .start()
+            .await
+            .expect("Error while starting the discord bot client.");
+    });
+
+    Ok(discord_handle)
 }
