@@ -13,9 +13,8 @@ const TEMPLATE: &'static str = r#"
     <meta http-equiv="refresh" content="30">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>A Basic HTML5 Template</title>
-    <meta name="description" content="A simple HTML5 Template for new projects.">
-    <meta name="author" content="Woile">
+    <title>Donation display for H1A V1</title>
+    
     </head>
 
     <body>
