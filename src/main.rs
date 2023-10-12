@@ -1,8 +1,9 @@
 use std::sync::Arc;
 use tokio::task;
 
-use tourney_dono::db;
+use tourney_dono::db::DB;
 use tourney_dono::discord;
+use tourney_dono::templates::Templates;
 use tourney_dono::webserver;
 
 #[tokio::main]
@@ -13,8 +14,11 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    let db = db::DB::new().await.unwrap();
+    let db = DB::new().await.unwrap();
     let db = Arc::new(db);
+
+    let templates = Templates::new();
+    let templates = Arc::new(templates);
 
     let dc_db = db.clone();
 
@@ -26,7 +30,7 @@ async fn main() {
     });
 
     task::spawn(async move {
-        webserver::initiate_webserver(db).await;
+        webserver::initiate_webserver(db, templates).await;
     })
     .await
     .unwrap();

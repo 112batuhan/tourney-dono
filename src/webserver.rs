@@ -1,48 +1,49 @@
-use axum::{extract::State, http::StatusCode, response::Html, routing::get, Router};
-use minijinja::render;
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{Html, IntoResponse, Response},
+    routing::get,
+    Router,
+};
 use std::{net::SocketAddr, sync::Arc};
 
-use crate::db::DB;
+use crate::{db::DB, templates::Templates};
 
-const TEMPLATE: &'static str = r#"
-    <!doctype html>
+struct AppError(anyhow::Error);
 
-    <html lang="en">
-    <head>
-    <meta charset="utf-8">
-    <meta http-equiv="refresh" content="30">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Donation display for H1A V1</title>
-    
-    </head>
-
-    <body>
-        
-        {% for donation in donations %}
-        <li>{{ donation.donor }} {{ donation.amount }}₺</li>
-        {% endfor %}
-            
-    </body>
-    </html>
-    "#;
-
-async fn hello(State(state): State<Arc<SharedState>>) -> Result<Html<String>, StatusCode> {
-    let donations = state
-        .db
-        .get_donations()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let r = render!(TEMPLATE, donations);
-    Ok(Html(r))
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Something went wrong: {}", self.0),
+        )
+            .into_response()
+    }
 }
 
-pub struct SharedState {
+impl<E> From<E> for AppError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
+
+async fn hello(State(state): State<Arc<SharedState<'static>>>) -> Result<Html<String>, AppError> {
+    let donations = state.db.get_donations().await?;
+
+    let html_string = state.templates.get_html(donations)?;
+    Ok(Html(html_string))
+}
+
+pub struct SharedState<'a> {
     db: Arc<DB>,
+    templates: Arc<Templates<'a>>,
 }
 
-pub async fn initiate_webserver(db: Arc<DB>) {
-    let state = Arc::new(SharedState { db });
+pub async fn initiate_webserver(db: Arc<DB>, templates: Arc<Templates<'static>>) {
+    let state = Arc::new(SharedState { db, templates });
     let app = Router::new().route("/", get(hello)).with_state(state);
 
     let addr = SocketAddr::from((
