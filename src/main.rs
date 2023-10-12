@@ -17,9 +17,8 @@ async fn main() {
     let db = Arc::new(db);
 
     let dc_db = db.clone();
-    
-    // 112servis, heyronii
-    let allowed_users = vec![142828565359099905, 146746632799649792];
+
+    let allowed_users = db.get_admins().await.unwrap();
     task::spawn(async move {
         discord::initiate_dc_bot(dc_db, allowed_users)
             .await
