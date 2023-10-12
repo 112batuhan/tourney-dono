@@ -1,5 +1,5 @@
 use anyhow::{Ok, Result};
-use minijinja::{path_loader, Environment};
+use minijinja::{context, path_loader, Environment};
 
 use crate::Donation;
 
@@ -16,7 +16,7 @@ impl Templates<'static> {
 
     pub fn get_html(&self, donations: Vec<Donation>) -> Result<String> {
         let tmpl = self.env.get_template("donations.j2")?;
-        let html_string = tmpl.render(donations)?;
+        let html_string = tmpl.render(context!(donations))?;
         Ok(html_string)
     }
 }
