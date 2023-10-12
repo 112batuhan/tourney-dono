@@ -17,7 +17,7 @@ use serenity::{
     Client,
 };
 
-use crate::{db::DB, get_total_amount};
+use crate::{db::DB, total_amount};
 
 pub struct DbKey;
 impl TypeMapKey for DbKey {
@@ -74,7 +74,7 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
         db.get_donations().await?
     };
 
-    let sum = get_total_amount(&donations);
+    let sum = total_amount(&donations);
     donations.sort_by(|a, b| b.amount.partial_cmp(&a.amount).unwrap());
 
     let display_msg = donations

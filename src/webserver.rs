@@ -32,7 +32,6 @@ where
 
 async fn hello(State(state): State<Arc<SharedState<'static>>>) -> Result<Html<String>, AppError> {
     let donations = state.db.get_donations().await?;
-
     let html_string = state.templates.get_html(donations)?;
     Ok(Html(html_string))
 }
