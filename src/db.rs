@@ -1,5 +1,4 @@
 use anyhow::Result;
-use serenity::futures::future::ok;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::Donation;
