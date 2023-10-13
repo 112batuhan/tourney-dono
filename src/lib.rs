@@ -35,7 +35,6 @@ pub struct TemplateData {
     top: Vec<Donation>,
     latest: Vec<Donation>,
     total: f32,
-    new_dono: bool,
     server_url: String,
 }
 
@@ -44,13 +43,11 @@ impl TemplateData {
         let total = total_amount(raw_donations);
         let top = aggregate_donations(raw_donations);
         let latest = sort_by_date(raw_donations);
-        let new_dono = is_celebrateable(raw_donations);
 
         Self {
             top,
             latest,
             total,
-            new_dono,
             server_url: SERVER_URL.clone(),
         }
     }

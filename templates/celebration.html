@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {# Refresh page every 30 seconds #}
+    <meta http-equiv="refresh" content="30" />
+    {# Set the values to an element to read it in js #}
+    <meta id="serverUrl" data="{{data.server_url}}" />
+
+    <title>Donation display for H1A V1</title>
+
+    <style></style>
+
+    <script>
+      window.onload = () => {
+        let vid = document.getElementById("celebrationAudio");
+        vid.volume = 0.2;
+        var serverUrl = document
+          .getElementById("serverUrl")
+          .getAttribute("data");
+        // notify the server that the celebration happened
+        // little delay to avoid oopsies
+        setTimeout(() => {
+          fetch(serverUrl + "celebrated");
+        }, 5000);
+      };
+    </script>
+  </head>
+
+  <body>
+    <div class="newDonation">
+      <div>Yeni bagis!</div>
+      <span> {{data.latest[0].donor}} </span>
+      <span> {{data.latest[0].amount}} </span>
+      <span> ₺ </span>
+      <div class="total">Toplam Odul Havuzu: {{data.total}}</div>
+      <audio id="celebrationAudio" autoplay>
+        <source src="{{data.server_url}}assets/applause.mp3" />
+      </audio>
+    </div>
+  </body>
+</html>
