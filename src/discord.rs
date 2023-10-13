@@ -81,7 +81,7 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
         .iter()
         .map(|donation| {
             format!(
-                "id:{} - donor:{} - amount:{} - celebrated:{} - date:{}",
+                "**ID**:`{}` - **Donor**:`{}` - **Amount**:`{}` - **Celebrated**:`{}` - **Date**:`{}`",
                 donation.id,
                 donation.donor,
                 donation.amount,

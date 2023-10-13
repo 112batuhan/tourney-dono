@@ -12,15 +12,45 @@
     <style>
     </style>
 
+    <script>
+        window.onload = () => {
+            setTimeout(confirm_celebration, 15000);
+        };
+        function confirm_celebration() {
+            fetch('http://0.0.0.0:3413/celebrated')
+        }
+    </script>
+
 </head>
 
 <body>
 
+    <div class="total">Toplam Odul Havuzu: {{data.total}} </div>
+    <hr>
     <div class="top_donors">
+        <div>En Cok Bagis Yapanlar:</div>
         {% for donation in data.top[0:3] %}
-        <li>{{ donation.donor }} {{ donation.amount }}₺</li>
+        <div>
+            <span> {{ donation.donor }} </span>
+            <span> {{ donation.amount }} </span>
+            <span> ₺ </span>
+        </div>
         {% endfor %}
     </div>
+    <hr>
+    <div class="latest_donation">
+        <div>En Son Bagislar:</div>
+        {% for donation in data.latest[0:3] %}
+        <div>
+            <span>{{ donation.donor }} </span>
+            <span> {{ donation.amount }}</span>
+            <span>₺</span>
+        </div>
+        {% endfor %}
+    </div>
+
+
+
 
 </body>
 

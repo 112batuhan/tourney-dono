@@ -80,7 +80,7 @@ pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
             return_vec.push(donation.clone())
         }
     });
-    return_vec
+    sort_by_amount(&return_vec)
 }
 
 pub fn is_celebrateable(donations: &[Donation]) -> bool {
