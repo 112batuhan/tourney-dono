@@ -1,7 +1,7 @@
 use anyhow::{Ok, Result};
 use minijinja::{context, path_loader, Environment};
 
-use crate::{is_celebrateable, Donation, TemplateData};
+use crate::{CelebrationData, Donation, TemplateData};
 
 pub struct Templates<'a> {
     env: Environment<'a>,
@@ -15,14 +15,17 @@ impl Templates<'static> {
     }
 
     pub fn get_html(&self, donations: Vec<Donation>) -> Result<String> {
-        let tmpl = if is_celebrateable(&donations) {
-            self.env.get_template("celebration.html")?
+        let celebration_donation = CelebrationData::new(&donations);
+
+        let html_string = if let Some(data) = celebration_donation {
+            let tmpl = self.env.get_template("celebration.html")?;
+            tmpl.render(context!(data))?
         } else {
-            self.env.get_template("donations.html")?
+            let tmpl = self.env.get_template("donations.html")?;
+            let data = TemplateData::new(&donations);
+            tmpl.render(context!(data))?
         };
 
-        let data = TemplateData::new(&donations);
-        let html_string = tmpl.render(context!(data))?;
         Ok(html_string)
     }
 }

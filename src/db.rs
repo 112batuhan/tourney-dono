@@ -1,5 +1,6 @@
 use anyhow::Result;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 
 use crate::Donation;
 
@@ -24,7 +25,8 @@ impl DB {
     pub async fn add_donation(&self, donor: &str, amount: &f32) -> Result<()> {
         sqlx::query_as!(
             Donation,
-            "INSERT INTO donations (donor, amount) VALUES ($1, $2) Returning id, donor, amount, donated_at, celebrated",
+            "INSERT INTO donations (donor, amount) VALUES ($1, $2) Returning id, donor, amount, \
+             donated_at, celebrated",
             donor,
             amount,
         )
@@ -37,7 +39,8 @@ impl DB {
     pub async fn delete_donation(&self, donor: i64) -> Result<()> {
         sqlx::query_as!(
             Donation,
-            "DELETE FROM donations WHERE id = $1 Returning id, donor, amount, donated_at, celebrated",
+            "DELETE FROM donations WHERE id = $1 Returning id, donor, amount, donated_at, \
+             celebrated",
             donor
         )
         .fetch_one(&self.con)
@@ -56,8 +59,26 @@ impl DB {
 
         Ok(donations)
     }
+
+    pub async fn set_celebration(&self, id: i64, state_to_set: bool) -> Result<()> {
+        sqlx::query_as!(
+            Donation,
+            "UPDATE donations SET celebrated = $1 WHERE id = $2 Returning id, donor, amount, \
+             donated_at, celebrated",
+            state_to_set,
+            id
+        )
+        .fetch_one(&self.con)
+        .await?;
+        Ok(())
+    }
+
     pub async fn set_all_celebration(&self) -> Result<()> {
-        sqlx::query_as!(Donation,"UPDATE donations SET celebrated = TRUE  Returning id, donor, amount, donated_at, celebrated")
+        sqlx::query_as!(
+            Donation,
+            "UPDATE donations SET celebrated = TRUE  Returning id, donor, amount, donated_at, \
+             celebrated"
+        )
         .fetch_one(&self.con)
         .await?;
         Ok(())

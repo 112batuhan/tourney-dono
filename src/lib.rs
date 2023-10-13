@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -53,6 +53,29 @@ impl TemplateData {
     }
 }
 
+#[derive(Serialize)]
+pub struct CelebrationData {
+    donation: Donation,
+    total: f32,
+    server_url: String,
+}
+
+impl CelebrationData {
+    pub fn new(raw_donations: &[Donation]) -> Option<Self> {
+        let celebrated_donation = get_celebrateable(&raw_donations);
+        if let Some(donation) = celebrated_donation {
+            let total = total_amount(raw_donations);
+            Some(Self {
+                total,
+                donation,
+                server_url: SERVER_URL.clone(),
+            })
+        } else {
+            None
+        }
+    }
+}
+
 pub fn total_amount(donations: &[Donation]) -> f32 {
     let sum = donations
         .iter()
@@ -87,25 +110,9 @@ pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
     sort_by_amount(&return_vec)
 }
 
-pub fn is_celebrateable(donations: &[Donation]) -> bool {
-    donations.iter().any(|donation| !donation.celebrated)
-}
-
-#[allow(unused)]
-fn get_dummy_donos() -> Vec<Donation> {
-    let mut vec = vec![
-        Donation::new("a".to_string(), 1.),
-        Donation::new("a".to_string(), 1.),
-        Donation::new("a".to_string(), 1.),
-        Donation::new("a".to_string(), 1.),
-        Donation::new("a".to_string(), 1.),
-        Donation::new("b".to_string(), 1.),
-        Donation::new("b".to_string(), 1.),
-        Donation::new("c".to_string(), 1.),
-    ];
-    vec.iter_mut().enumerate().for_each(|(index, donation)| {
-        let day = Duration::days(index as i64);
-        donation.donated_at += day;
-    });
-    dbg!(vec)
+pub fn get_celebrateable(donations: &[Donation]) -> Option<Donation> {
+    donations
+        .iter()
+        .find(|donation| !donation.celebrated)
+        .cloned()
 }

@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
     routing::get,
@@ -40,9 +40,10 @@ async fn send_page(
 }
 
 async fn set_celebration(
+    Path(id): Path<i64>,
     State(state): State<Arc<SharedState<'static>>>,
 ) -> Result<StatusCode, AppError> {
-    state.db.set_all_celebration().await?;
+    state.db.set_celebration(id, true).await?;
     Ok(StatusCode::OK)
 }
 
@@ -55,7 +56,7 @@ pub async fn initiate_webserver(db: Arc<DB>, templates: Arc<Templates<'static>>)
     let state = Arc::new(SharedState { db, templates });
     let app = Router::new()
         .nest_service("/assets", ServeDir::new("assets"))
-        .route("/celebrated", get(set_celebration))
+        .route("/celebrated/:id", get(set_celebration))
         .route("/", get(send_page))
         .with_state(state);
 

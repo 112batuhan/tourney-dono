@@ -7,7 +7,11 @@
     {# Refresh page every 30 seconds #}
     <meta http-equiv="refresh" content="30" />
     {# Set the values to an element to read it in js #}
-    <meta id="serverUrl" data="{{data.server_url}}" />
+    <meta
+      id="serverUrl"
+      server-url="{{data.server_url}}"
+      donation-id="{{data.donation.id}}"
+    />
 
     <title>Donation display for H1A V1</title>
 
@@ -19,11 +23,14 @@
         vid.volume = 0.2;
         var serverUrl = document
           .getElementById("serverUrl")
-          .getAttribute("data");
+          .getAttribute("server-url");
+        var donationId = document
+          .getElementById("serverUrl")
+          .getAttribute("donation-id");
         // notify the server that the celebration happened
         // little delay to avoid oopsies
         setTimeout(() => {
-          fetch(serverUrl + "celebrated");
+          fetch(serverUrl + "celebrated/" + donationId);
         }, 5000);
       };
     </script>
@@ -32,10 +39,10 @@
   <body>
     <div class="newDonation">
       <div>Yeni bagis!</div>
-      <span> {{data.latest[0].donor}} </span>
-      <span> {{data.latest[0].amount}} </span>
+      <span> {{data.donation.donor}} </span>
+      <span> {{data.donation.amount}} </span>
       <span> ₺ </span>
-      <div class="total">Toplam Odul Havuzu: {{data.total}}</div>
+      <div class="total">Toplam Odul Havuzu: {{data.donation.total}}</div>
       <audio id="celebrationAudio" autoplay>
         <source src="{{data.server_url}}assets/applause.mp3" />
       </audio>

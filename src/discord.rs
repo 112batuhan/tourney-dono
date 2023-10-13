@@ -1,23 +1,17 @@
+use std::env;
+use std::sync::Arc;
+
 use anyhow::Result;
+use serenity::framework::standard::macros::{command, group, hook};
+use serenity::framework::standard::{Args, CommandResult};
+use serenity::framework::StandardFramework;
+use serenity::model::gateway::Ready;
+use serenity::model::prelude::Message;
+use serenity::prelude::{Context, EventHandler, GatewayIntents, TypeMapKey};
+use serenity::{async_trait, Client};
 
-use std::{env, sync::Arc};
-
-use serenity::{
-    async_trait,
-    framework::{
-        standard::{
-            macros::{command, group, hook},
-            Args, CommandResult,
-        },
-        StandardFramework,
-    },
-    model::gateway::Ready,
-    model::prelude::Message,
-    prelude::{Context, EventHandler, GatewayIntents, TypeMapKey},
-    Client,
-};
-
-use crate::{db::DB, TemplateData};
+use crate::db::DB;
+use crate::TemplateData;
 
 pub struct DbKey;
 impl TypeMapKey for DbKey {
@@ -81,7 +75,8 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
         .iter()
         .map(|donation| {
             format!(
-                "**ID**:`{}` - **Donor**:`{}` - **Amount**:`{}` - **Celebrated**:`{}` - **Date**:`{}`",
+                "**ID**:`{}` - **Donor**:`{}` - **Amount**:`{}` - **Celebrated**:`{}` - \
+                 **Date**:`{}`",
                 donation.id,
                 donation.donor,
                 donation.amount,
@@ -99,8 +94,24 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+#[command]
+pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let donor = args.single::<i64>()?;
+
+    {
+        let data = ctx.data.read().await;
+        let db = data.get::<DbKey>().unwrap().clone();
+        db.set_celebration(donor, false).await?
+    }
+
+    let response_message = format!("Donation set to be celebrated again: {}", donor);
+    msg.channel_id.say(&ctx.http, response_message).await?;
+
+    Ok(())
+}
+
 #[group]
-#[commands(add, remove, all)]
+#[commands(add, remove, all, celebrate)]
 struct Command;
 
 struct Handler;
