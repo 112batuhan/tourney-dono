@@ -24,7 +24,7 @@ impl DB {
     pub async fn add_donation(&self, donor: &str, amount: &f32) -> Result<()> {
         sqlx::query_as!(
             Donation,
-            "INSERT INTO donations (donor, amount) VALUES ($1, $2) Returning donor, amount, donated_at",
+            "INSERT INTO donations (donor, amount) VALUES ($1, $2) Returning id, donor, amount, donated_at, celebrated",
             donor,
             amount,
         )
@@ -34,10 +34,10 @@ impl DB {
         Ok(())
     }
 
-    pub async fn delete_donation(&self, donor: &str) -> Result<()> {
+    pub async fn delete_donation(&self, donor: i64) -> Result<()> {
         sqlx::query_as!(
             Donation,
-            "DELETE FROM donations WHERE donor = $1 Returning donor, amount, donated_at",
+            "DELETE FROM donations WHERE id = $1 Returning id, donor, amount, donated_at, celebrated",
             donor
         )
         .fetch_one(&self.con)
@@ -47,12 +47,20 @@ impl DB {
     }
 
     pub async fn get_donations(&self) -> Result<Vec<Donation>> {
-        let donations =
-            sqlx::query_as!(Donation, "SELECT donor, amount, donated_at FROM donations")
-                .fetch_all(&self.con)
-                .await?;
+        let donations = sqlx::query_as!(
+            Donation,
+            "SELECT id, donor, amount, donated_at, celebrated FROM donations"
+        )
+        .fetch_all(&self.con)
+        .await?;
 
         Ok(donations)
+    }
+    pub async fn set_all_celebration(&self) -> Result<()> {
+        sqlx::query_as!(Donation,"UPDATE donations SET celebrated = TRUE  Returning id, donor, amount, donated_at, celebrated")
+        .fetch_one(&self.con)
+        .await?;
+        Ok(())
     }
 
     pub async fn get_admins(&self) -> Result<Vec<u64>> {

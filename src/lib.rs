@@ -9,9 +9,11 @@ pub mod webserver;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Default, Clone)]
 pub struct Donation {
+    pub id: i64,
     pub donor: String,
     pub amount: f32,
     pub donated_at: DateTime<Utc>,
+    pub celebrated: bool,
 }
 impl Donation {
     pub fn new(donor: String, amount: f32) -> Self {
@@ -23,12 +25,49 @@ impl Donation {
     }
 }
 
+#[derive(Serialize)]
+pub struct TemplateData {
+    top: Vec<Donation>,
+    latest: Vec<Donation>,
+    total: f32,
+    new_dono: bool,
+}
+
+impl TemplateData {
+    pub fn new(raw_donations: &[Donation]) -> Self {
+        let total = total_amount(&raw_donations);
+        let top = aggregate_donations(&raw_donations);
+        let latest = sort_by_date(&raw_donations);
+        let new_dono = is_celebrateable(&raw_donations);
+
+        Self {
+            top,
+            latest,
+            total,
+            new_dono,
+        }
+    }
+}
+
 pub fn total_amount(donations: &[Donation]) -> f32 {
     let sum = donations
         .iter()
         .fold(0., |acc, donation| acc + donation.amount);
     sum * 2.
 }
+
+pub fn sort_by_date(donations: &[Donation]) -> Vec<Donation> {
+    let mut donations = donations.clone().to_vec();
+    donations.sort_by(|a, b| b.amount.partial_cmp(&a.amount).unwrap());
+    donations
+}
+
+pub fn sort_by_amount(donations: &[Donation]) -> Vec<Donation> {
+    let mut donations = donations.clone().to_vec();
+    donations.sort_by(|a, b| b.donated_at.partial_cmp(&a.donated_at).unwrap());
+    donations
+}
+
 pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
     let mut return_vec: Vec<Donation> = vec![];
     donations.iter().for_each(|donation| {
@@ -44,10 +83,11 @@ pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
     return_vec
 }
 
-pub fn sort_by_date(donations: &[Donation]) -> Vec<Donation> {
-    let mut donations = donations.clone().to_vec();
-    donations.sort_by(|a, b| b.donated_at.partial_cmp(&a.donated_at).unwrap());
+pub fn is_celebrateable(donations: &[Donation]) -> bool {
     donations
+        .iter()
+        .find(|donation| !donation.celebrated)
+        .is_some()
 }
 
 #[allow(unused)]

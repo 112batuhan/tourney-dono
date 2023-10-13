@@ -30,10 +30,19 @@ where
     }
 }
 
-async fn hello(State(state): State<Arc<SharedState<'static>>>) -> Result<Html<String>, AppError> {
+async fn send_page(
+    State(state): State<Arc<SharedState<'static>>>,
+) -> Result<Html<String>, AppError> {
     let donations = state.db.get_donations().await?;
     let html_string = state.templates.get_html(donations)?;
     Ok(Html(html_string))
+}
+
+async fn set_celebration(
+    State(state): State<Arc<SharedState<'static>>>,
+) -> Result<StatusCode, AppError> {
+    state.db.set_all_celebration().await?;
+    Ok(StatusCode::ACCEPTED)
 }
 
 pub struct SharedState<'a> {
@@ -43,7 +52,10 @@ pub struct SharedState<'a> {
 
 pub async fn initiate_webserver(db: Arc<DB>, templates: Arc<Templates<'static>>) {
     let state = Arc::new(SharedState { db, templates });
-    let app = Router::new().route("/", get(hello)).with_state(state);
+    let app = Router::new()
+        .route("/celebrated", get(set_celebration))
+        .route("/", get(send_page))
+        .with_state(state);
 
     let addr = SocketAddr::from((
         [0, 0, 0, 0],

@@ -16,9 +16,11 @@
 
 <body>
 
-    {% for donation in donations[0:3] %}
-    <li>{{ donation.donor }} {{ donation.amount }}₺</li>
-    {% endfor %}
+    <div class="top_donors">
+        {% for donation in data.top[0:3] %}
+        <li>{{ donation.donor }} {{ donation.amount }}₺</li>
+        {% endfor %}
+    </div>
 
 </body>
 

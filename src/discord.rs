@@ -17,7 +17,7 @@ use serenity::{
     Client,
 };
 
-use crate::{db::DB, total_amount};
+use crate::{db::DB, TemplateData};
 
 pub struct DbKey;
 impl TypeMapKey for DbKey {
@@ -53,12 +53,12 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
 }
 #[command]
 pub async fn remove(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let donor = args.single::<String>()?;
+    let donor = args.single::<i64>()?;
 
     {
         let data = ctx.data.read().await;
         let db = data.get::<DbKey>().unwrap().clone();
-        db.delete_donation(&donor).await?
+        db.delete_donation(donor).await?
     }
 
     let response_message = format!("Donation removed: {}", donor);
@@ -68,29 +68,29 @@ pub async fn remove(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
 }
 #[command]
 pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
-    let mut donations = {
+    let donations = {
         let data = ctx.data.read().await;
         let db = data.get::<DbKey>().unwrap();
         db.get_donations().await?
     };
 
-    let sum = total_amount(&donations);
-    donations.sort_by(|a, b| b.amount.partial_cmp(&a.amount).unwrap());
+    let data = TemplateData::new(&donations);
 
-    let display_msg = donations
+    let display_msg = data
+        .latest
         .iter()
-        .enumerate()
-        .map(|(index, donation)| {
+        .map(|donation| {
             format!(
-                "{} - {}:{} - {}",
-                index + 1,
+                "id:{} - donor:{} - amount:{} - celebrated:{} - date:{}",
+                donation.id,
                 donation.donor,
                 donation.amount,
+                donation.celebrated,
                 donation.donated_at
             )
         })
         .fold(
-            format!("Total donation amount (doubled) : {} \n", sum),
+            format!("Total donation amount (doubled) : {} \n", data.total),
             |msg_string, line| msg_string + &line + "\n",
         );
 
