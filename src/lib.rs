@@ -64,14 +64,14 @@ pub fn total_amount(donations: &[Donation]) -> f32 {
 }
 
 pub fn sort_by_date(donations: &[Donation]) -> Vec<Donation> {
-    let mut donations = donations.clone().to_vec();
-    donations.sort_by(|a, b| b.amount.partial_cmp(&a.amount).unwrap());
+    let mut donations = donations.to_vec();
+    donations.sort_by(|a, b| b.donated_at.partial_cmp(&a.donated_at).unwrap());
     donations
 }
 
 pub fn sort_by_amount(donations: &[Donation]) -> Vec<Donation> {
-    let mut donations = donations.clone().to_vec();
-    donations.sort_by(|a, b| b.donated_at.partial_cmp(&a.donated_at).unwrap());
+    let mut donations = donations.to_vec();
+    donations.sort_by(|a, b| b.amount.partial_cmp(&a.amount).unwrap());
     donations
 }
 
