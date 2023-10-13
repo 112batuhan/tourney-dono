@@ -41,10 +41,10 @@ pub struct TemplateData {
 
 impl TemplateData {
     pub fn new(raw_donations: &[Donation]) -> Self {
-        let total = total_amount(&raw_donations);
-        let top = aggregate_donations(&raw_donations);
-        let latest = sort_by_date(&raw_donations);
-        let new_dono = is_celebrateable(&raw_donations);
+        let total = total_amount(raw_donations);
+        let top = aggregate_donations(raw_donations);
+        let latest = sort_by_date(raw_donations);
+        let new_dono = is_celebrateable(raw_donations);
 
         Self {
             top,
@@ -91,10 +91,7 @@ pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
 }
 
 pub fn is_celebrateable(donations: &[Donation]) -> bool {
-    donations
-        .iter()
-        .find(|donation| !donation.celebrated)
-        .is_some()
+    donations.iter().any(|donation| !donation.celebrated)
 }
 
 #[allow(unused)]
