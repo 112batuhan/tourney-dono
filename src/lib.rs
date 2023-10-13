@@ -7,6 +7,11 @@ pub mod discord;
 pub mod templates;
 pub mod webserver;
 
+use once_cell::sync::Lazy;
+
+static SERVER_URL: Lazy<String> =
+    Lazy::new(|| std::env::var("SERVER_URL").expect("SERVER_URL environment variable is not set."));
+
 #[derive(Debug, Serialize, Deserialize, FromRow, Default, Clone)]
 pub struct Donation {
     pub id: i64,
@@ -31,6 +36,7 @@ pub struct TemplateData {
     latest: Vec<Donation>,
     total: f32,
     new_dono: bool,
+    server_url: String,
 }
 
 impl TemplateData {
@@ -45,6 +51,7 @@ impl TemplateData {
             latest,
             total,
             new_dono,
+            server_url: SERVER_URL.clone(),
         }
     }
 }

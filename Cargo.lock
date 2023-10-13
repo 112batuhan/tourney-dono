@@ -1922,6 +1922,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "minijinja",
+ "once_cell",
  "serde",
  "serde_json",
  "serenity",

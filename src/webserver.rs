@@ -6,6 +6,7 @@ use axum::{
     Router,
 };
 use std::{net::SocketAddr, sync::Arc};
+use tower_http::services::ServeDir;
 
 use crate::{db::DB, templates::Templates};
 
@@ -42,7 +43,7 @@ async fn set_celebration(
     State(state): State<Arc<SharedState<'static>>>,
 ) -> Result<StatusCode, AppError> {
     state.db.set_all_celebration().await?;
-    Ok(StatusCode::ACCEPTED)
+    Ok(StatusCode::OK)
 }
 
 pub struct SharedState<'a> {
@@ -53,6 +54,7 @@ pub struct SharedState<'a> {
 pub async fn initiate_webserver(db: Arc<DB>, templates: Arc<Templates<'static>>) {
     let state = Arc::new(SharedState { db, templates });
     let app = Router::new()
+        .nest_service("/assets", ServeDir::new("assets"))
         .route("/celebrated", get(set_celebration))
         .route("/", get(send_page))
         .with_state(state);

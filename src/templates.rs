@@ -15,7 +15,7 @@ impl Templates<'static> {
     }
 
     pub fn get_html(&self, donations: Vec<Donation>) -> Result<String> {
-        let tmpl = self.env.get_template("donations.j2")?;
+        let tmpl = self.env.get_template("donations.html")?;
         let data = TemplateData::new(&donations);
         let html_string = tmpl.render(context!(data))?;
         Ok(html_string)
