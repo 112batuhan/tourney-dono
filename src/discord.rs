@@ -114,6 +114,9 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     Ok(())
 }
 
+
+
+
 #[group]
 #[commands(add, remove, all, celebrate)]
 struct Command;

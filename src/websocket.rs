@@ -40,19 +40,20 @@ pub async fn handle_socket(
     db: Arc<DB>,
 ) {
     let (mut socket_sender, mut socket_receiver) = socket.split();
-    // Send when a new connection is established
+    // Send data when a new connection is established
     if let Err(err) = send_donations(&mut socket_sender, &socket_addr, db.clone(), None).await {
         error!("Error while sending donation: {}", err)
     }
 
     let (oneshot_sender, mut oneshot_receiver) = oneshot::channel::<()>();
-    let moving_socket_addr = socket_addr.clone();
+    let moving_socket_addr = socket_addr;
 
-    // send when a new donation is triggered
+    // send data when a new donation is triggered
     tokio::task::spawn(async move {
         loop {
             select! {
-                _msg = &mut oneshot_receiver=> {
+                // closing this task when main handler is returned
+                _msg = &mut oneshot_receiver => {
                     break;
                 }
 
@@ -68,23 +69,23 @@ pub async fn handle_socket(
         }
     });
 
-    // listen for closing message
-    if let Some(msg) = socket_receiver.next().await {
-        if let Ok(msg) = msg {
-            match msg {
-                Message::Close(close_message) => {
+    loop {
+        // listen for closing message
+        if let Some(msg) = socket_receiver.next().await {
+            if let Ok(msg) = msg {
+                if let Message::Close(close_message) = msg {
                     info!(
                         "Closing the connection of {}: {:?}",
                         socket_addr, close_message
                     );
+                    // send closing signal to donation update task
                     oneshot_sender.send(()).ok();
                     return;
                 }
-                _ => {}
+            } else {
+                warn!("Connection of {} got abruptly closed", socket_addr);
+                return;
             }
-        } else {
-            warn!("Connection of {} got abruptly closed", socket_addr);
-            return;
         }
     }
 }
