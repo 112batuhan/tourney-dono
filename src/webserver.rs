@@ -8,6 +8,7 @@ use axum::routing::get;
 use axum::{headers, Router, TypedHeader};
 use tokio::sync::broadcast::Sender;
 use tower_http::services::ServeDir;
+use tracing::info;
 
 use crate::db::DB;
 use crate::websocket::handle_socket;
@@ -44,7 +45,7 @@ async fn ws_handler(
     } else {
         String::from("Unknown browser")
     };
-    println!("`{user_agent}` at {addr} connected.");
+    info!("`{user_agent}` at {addr} connected.");
     ws.on_upgrade(move |socket| {
         handle_socket(
             socket,
@@ -57,10 +58,10 @@ async fn ws_handler(
 
 pub struct SharedState {
     db: Arc<DB>,
-    donation_sender: Sender<String>,
+    donation_sender: Sender<()>,
 }
 
-pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<String>) {
+pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<()>) {
     let state = Arc::new(SharedState {
         db,
         donation_sender,

@@ -1,58 +1,88 @@
 use std::net::SocketAddr;
-use std::ops::ControlFlow;
 use std::sync::Arc;
 
+use anyhow::{Context, Result};
 use axum::extract::ws::{Message, WebSocket};
+use futures_util::stream::SplitSink;
+use futures_util::{SinkExt, StreamExt};
+use tokio::select;
 use tokio::sync::broadcast::Receiver;
+use tokio::sync::oneshot;
+use tracing::{error, info, warn};
 
 use crate::db::DB;
+use crate::DonationData;
 
-fn process_message(msg: Message, who: SocketAddr) -> ControlFlow<(), ()> {
-    match msg {
-        Message::Text(t) => {
-            println!(">>> {who} sent str: {t:?}");
-        }
-        Message::Binary(d) => {
-            println!(">>> {} sent {} bytes: {:?}", who, d.len(), d);
-        }
-        Message::Close(c) => {
-            if let Some(cf) = c {
-                println!(
-                    ">>> {} sent close with code {} and reason `{}`",
-                    who, cf.code, cf.reason
-                );
-            } else {
-                println!(">>> {who} somehow sent close message without CloseFrame");
-            }
-            return ControlFlow::Break(());
-        }
-
-        Message::Pong(v) => {
-            println!(">>> {who} sent pong with {v:?}");
-        }
-        // You should never need to manually handle Message::Ping, as axum's websocket library
-        // will do so for you automagically by replying with Pong and copying the v according to
-        // spec. But if you need the contents of the pings you can see them here.
-        Message::Ping(v) => {
-            println!(">>> {who} sent ping with {v:?}");
-        }
-    }
-    ControlFlow::Continue(())
+async fn send_donations(
+    socket_sender: &mut SplitSink<WebSocket, Message>,
+    socket_addr: &SocketAddr,
+    db: Arc<DB>,
+) -> Result<()> {
+    let donations = db
+        .get_donations()
+        .await
+        .context("Database error while fetching data.")?;
+    let json_string = DonationData::new(&donations)
+        .get_json_string()
+        .context("Failed to parse donation data.")?;
+    socket_sender
+        .send(Message::Text(json_string))
+        .await
+        .with_context(|| format!("Failed to send donation data to {}", socket_addr))?;
+    Ok(())
 }
 
 pub async fn handle_socket(
-    mut socket: WebSocket,
+    socket: WebSocket,
     socket_addr: SocketAddr,
-    donation_receiver: Receiver<String>,
+    mut donation_receiver: Receiver<()>,
     db: Arc<DB>,
 ) {
-    if let Some(msg) = socket.recv().await {
+    let (mut socket_sender, mut socket_receiver) = socket.split();
+    // Send when a new connection is established
+    if let Err(err) = send_donations(&mut socket_sender, &socket_addr, db.clone()).await {
+        error!("Error while sending donation: {}", err)
+    }
+
+    let (oneshot_sender, mut oneshot_receiver) = oneshot::channel::<()>();
+    let moving_socket_addr = socket_addr.clone();
+
+    // send when a new donation is triggered
+    tokio::task::spawn(async move {
+        loop {
+            select! {
+                _msg = &mut oneshot_receiver=> {
+                    break;
+                }
+
+                _new_donation = donation_receiver.recv() => {
+                    if let Ok(_) = _new_donation{
+                        if let Err(err) = send_donations(&mut socket_sender, &moving_socket_addr, db.clone()).await
+                        {
+                            error!("Error while sending donation: {}", err);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // listen for closing message
+    if let Some(msg) = socket_receiver.next().await {
         if let Ok(msg) = msg {
-            if process_message(msg, socket_addr).is_break() {
-                return;
+            match msg {
+                Message::Close(close_message) => {
+                    info!(
+                        "Closing the connection of {}: {:?}",
+                        socket_addr, close_message
+                    );
+                    oneshot_sender.send(()).ok();
+                    return;
+                }
+                _ => {}
             }
         } else {
-            println!("client {socket_addr} abruptly disconnected");
+            warn!("Connection of {} got abruptly closed", socket_addr);
             return;
         }
     }

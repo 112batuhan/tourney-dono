@@ -22,25 +22,24 @@ impl DB {
         Ok(DB { con })
     }
 
-    pub async fn add_donation(&self, donor: &str, amount: &f32) -> Result<()> {
-        sqlx::query_as!(
+    pub async fn add_donation(&self, donor: &str, amount: &f32) -> Result<Donation> {
+        let donation = sqlx::query_as!(
             Donation,
             "INSERT INTO donations (donor, amount) VALUES ($1, $2) Returning id, donor, amount, \
-             donated_at, celebrated",
+             donated_at",
             donor,
             amount,
         )
         .fetch_one(&self.con)
         .await?;
 
-        Ok(())
+        Ok(donation)
     }
 
     pub async fn delete_donation(&self, donor: i64) -> Result<()> {
         sqlx::query_as!(
             Donation,
-            "DELETE FROM donations WHERE id = $1 Returning id, donor, amount, donated_at, \
-             celebrated",
+            "DELETE FROM donations WHERE id = $1 Returning id, donor, amount, donated_at",
             donor
         )
         .fetch_one(&self.con)
@@ -52,36 +51,12 @@ impl DB {
     pub async fn get_donations(&self) -> Result<Vec<Donation>> {
         let donations = sqlx::query_as!(
             Donation,
-            "SELECT id, donor, amount, donated_at, celebrated FROM donations"
+            "SELECT id, donor, amount, donated_at FROM donations"
         )
         .fetch_all(&self.con)
         .await?;
 
         Ok(donations)
-    }
-
-    pub async fn set_celebration(&self, id: i64, state_to_set: bool) -> Result<()> {
-        sqlx::query_as!(
-            Donation,
-            "UPDATE donations SET celebrated = $1 WHERE id = $2 Returning id, donor, amount, \
-             donated_at, celebrated",
-            state_to_set,
-            id
-        )
-        .fetch_one(&self.con)
-        .await?;
-        Ok(())
-    }
-
-    pub async fn set_all_celebration(&self) -> Result<()> {
-        sqlx::query_as!(
-            Donation,
-            "UPDATE donations SET celebrated = TRUE  Returning id, donor, amount, donated_at, \
-             celebrated"
-        )
-        .fetch_one(&self.con)
-        .await?;
-        Ok(())
     }
 
     pub async fn get_admins(&self) -> Result<Vec<u64>> {

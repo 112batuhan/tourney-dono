@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -13,7 +14,6 @@ pub struct Donation {
     pub donor: String,
     pub amount: f32,
     pub donated_at: DateTime<Utc>,
-    pub celebrated: bool,
 }
 impl Donation {
     pub fn new(donor: String, amount: f32) -> Self {
@@ -27,22 +27,26 @@ impl Donation {
 
 #[derive(Serialize)]
 pub struct DonationData {
-    top_donations: Vec<Donation>,
-    latest_donations: Vec<Donation>,
+    aggregate_donations: Vec<Donation>,
+    individual_donations: Vec<Donation>,
     pricepool: f32,
 }
 
 impl DonationData {
     pub fn new(raw_donations: &[Donation]) -> Self {
         let pricepool = total_amount(raw_donations);
-        let top_donations = aggregate_donations(raw_donations);
-        let latest_donations = sort_by_date(raw_donations);
+        let aggregate_donations = aggregate_donations(raw_donations);
+        let individual_donations = sort_by_date(raw_donations);
 
         Self {
             pricepool,
-            top_donations,
-            latest_donations,
+            aggregate_donations,
+            individual_donations,
         }
+    }
+
+    pub fn get_json_string(&self) -> Result<String> {
+        serde_json::to_string(&self).context("Failed to convert donation data to JSON string.")
     }
 }
 

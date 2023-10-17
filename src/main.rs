@@ -10,13 +10,13 @@ async fn main() {
     dotenv::dotenv().ok();
 
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     let db = DB::new().await.unwrap();
     let db = Arc::new(db);
 
-    let (donation_sender, _receiver) = broadcast::channel::<String>(1);
+    let (donation_sender, _receiver) = broadcast::channel::<()>(1);
 
     let dc_donation_sender = donation_sender.clone();
     let dc_db = db.clone();

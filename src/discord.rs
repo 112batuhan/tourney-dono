@@ -24,7 +24,7 @@ impl TypeMapKey for AllowedUsersKey {
 }
 pub struct BroadcastSenderKey;
 impl TypeMapKey for BroadcastSenderKey {
-    type Value = Sender<String>;
+    type Value = Sender<()>;
 }
 
 #[hook]
@@ -44,9 +44,7 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
         let db = data.get::<DbKey>().unwrap();
         db.add_donation(&donor, &amount).await?;
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
-        broadcast_sender
-            .send("new dono placeholder!!".to_string())
-            .ok();
+        broadcast_sender.send(()).ok();
     }
 
     let response_message = format!("Donation added: {} - {} units!", donor, amount);
@@ -80,17 +78,12 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
     let data = DonationData::new(&donations);
 
     let display_msg = data
-        .latest_donations
+        .individual_donations
         .iter()
         .map(|donation| {
             format!(
-                "**ID**:`{}` - **Donor**:`{}` - **Amount**:`{}` - **Celebrated**:`{}` - \
-                 **Date**:`{}`",
-                donation.id,
-                donation.donor,
-                donation.amount,
-                donation.celebrated,
-                donation.donated_at
+                "**ID**:`{}` - **Donor**:`{}` - **Amount**:`{}` - **Date**:`{}`",
+                donation.id, donation.donor, donation.amount, donation.donated_at
             )
         })
         .fold(
@@ -109,15 +102,11 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
 
     {
         let data = ctx.data.read().await;
-        let db = data.get::<DbKey>().unwrap().clone();
-        db.set_celebration(donor, false).await?;
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
-        broadcast_sender
-            .send("new dono placeholder!!".to_string())
-            .ok();
+        broadcast_sender.send(()).ok();
     }
 
-    let response_message = format!("Donation set to be celebrated again: {}", donor);
+    let response_message = format!("Donation set to be   again: {}", donor);
     msg.channel_id.say(&ctx.http, response_message).await?;
 
     Ok(())
@@ -139,7 +128,7 @@ impl EventHandler for Handler {
 pub async fn initiate_dc_bot(
     db_instance: Arc<DB>,
     allowed_users: Vec<u64>,
-    donation_broadcast_sender: Sender<String>,
+    donation_broadcast_sender: Sender<()>,
 ) -> Result<()> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
