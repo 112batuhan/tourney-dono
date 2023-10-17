@@ -8,7 +8,7 @@ pub struct DB {
     pub con: PgPool,
 }
 
-struct DiscordID {
+struct Donations {
     discord_id: i64,
 }
 
@@ -72,7 +72,7 @@ impl DB {
     }
 
     pub async fn get_admins(&self) -> Result<Vec<u64>> {
-        let admins = sqlx::query_as!(DiscordID, "SELECT discord_id FROM admins")
+        let admins = sqlx::query_as!(Donations, "SELECT discord_id FROM admins")
             .fetch_all(&self.con)
             .await?;
 
@@ -81,5 +81,15 @@ impl DB {
             .map(|id_struct| id_struct.discord_id as u64)
             .collect();
         Ok(id_vec)
+    }
+
+    pub async fn delete_all_donations(&self) -> Result<Vec<Donation>> {
+        let donations = sqlx::query_as!(
+            Donation,
+            "DELETE FROM donations Returning id, donor, amount, donated_at"
+        )
+        .fetch_all(&self.con)
+        .await?;
+        Ok(donations)
     }
 }

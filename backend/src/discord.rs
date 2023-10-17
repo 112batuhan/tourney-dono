@@ -115,11 +115,8 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     Ok(())
 }
 
-// WIP
 #[command]
 pub async fn bulkadd(ctx: &Context, msg: &Message) -> CommandResult {
-    dbg!(&msg.content[8..]);
-
     let donation_iter = msg.content[8..]
         .split('\n')
         .filter_map(|line| line.split(',').collect_tuple::<(&str, &str)>())
@@ -141,8 +138,32 @@ pub async fn bulkadd(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+#[command]
+pub async fn deleteall(ctx: &Context, msg: &Message) -> CommandResult {
+    let donations = {
+        let data = ctx.data.read().await;
+        let db = data.get::<DbKey>().unwrap();
+        db.delete_all_donations().await?
+    };
+
+    let display_msg = donations
+        .iter()
+        .map(|donation| format!("{},{}", donation.donor, donation.amount,))
+        .fold(
+            "All donations have been deleted. You can use the following to add them again: \
+             ```.bulkadd "
+                .to_string(),
+            |msg_string, line| msg_string + &line + "\n",
+        );
+    let display_msg = display_msg + "```";
+
+    msg.channel_id.say(&ctx.http, display_msg).await?;
+
+    Ok(())
+}
+
 #[group]
-#[commands(add, remove, all, celebrate, bulkadd)]
+#[commands(add, remove, all, celebrate, bulkadd, deleteall)]
 struct Command;
 
 struct Handler;
