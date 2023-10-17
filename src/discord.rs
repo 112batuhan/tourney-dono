@@ -12,7 +12,7 @@ use serenity::{async_trait, Client};
 use tokio::sync::broadcast::Sender;
 
 use crate::db::DB;
-use crate::TemplateData;
+use crate::DonationData;
 
 pub struct DbKey;
 impl TypeMapKey for DbKey {
@@ -46,7 +46,7 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
         broadcast_sender
             .send("new dono placeholder!!".to_string())
-            .unwrap();
+            .ok();
     }
 
     let response_message = format!("Donation added: {} - {} units!", donor, amount);
@@ -77,10 +77,10 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
         db.get_donations().await?
     };
 
-    let data = TemplateData::new(&donations);
+    let data = DonationData::new(&donations);
 
     let display_msg = data
-        .latest
+        .latest_donations
         .iter()
         .map(|donation| {
             format!(
@@ -94,7 +94,7 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
             )
         })
         .fold(
-            format!("Total donation amount (doubled) : {} \n", data.total),
+            format!("Total donation amount (doubled) : {} \n", data.pricepool),
             |msg_string, line| msg_string + &line + "\n",
         );
 
@@ -114,7 +114,7 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
         broadcast_sender
             .send("new dono placeholder!!".to_string())
-            .unwrap();
+            .ok();
     }
 
     let response_message = format!("Donation set to be celebrated again: {}", donor);

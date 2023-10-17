@@ -1,16 +1,15 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::extract::{ConnectInfo, Path, State, WebSocketUpgrade};
+use axum::extract::{ConnectInfo, State, WebSocketUpgrade};
 use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{headers, Router, TypedHeader};
 use tokio::sync::broadcast::Sender;
 use tower_http::services::ServeDir;
 
 use crate::db::DB;
-use crate::templates::Templates;
 use crate::websocket::handle_socket;
 
 struct AppError(anyhow::Error);
@@ -38,7 +37,7 @@ async fn ws_handler(
     ws: WebSocketUpgrade,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    State(state): State<Arc<SharedState<'static>>>,
+    State(state): State<Arc<SharedState>>,
 ) -> impl IntoResponse {
     let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
@@ -46,46 +45,30 @@ async fn ws_handler(
         String::from("Unknown browser")
     };
     println!("`{user_agent}` at {addr} connected.");
-    ws.on_upgrade(move |socket| handle_socket(socket, addr, state.donation_sender.subscribe()))
+    ws.on_upgrade(move |socket| {
+        handle_socket(
+            socket,
+            addr,
+            state.donation_sender.subscribe(),
+            state.db.clone(),
+        )
+    })
 }
 
-async fn send_page(
-    State(state): State<Arc<SharedState<'static>>>,
-) -> Result<Html<String>, AppError> {
-    let donations = state.db.get_donations().await?;
-    let html_string = state.templates.get_html(donations)?;
-    Ok(Html(html_string))
-}
-
-async fn set_celebration(
-    Path(id): Path<i64>,
-    State(state): State<Arc<SharedState<'static>>>,
-) -> Result<StatusCode, AppError> {
-    state.db.set_celebration(id, true).await?;
-    Ok(StatusCode::OK)
-}
-
-pub struct SharedState<'a> {
+pub struct SharedState {
     db: Arc<DB>,
-    templates: Arc<Templates<'a>>,
     donation_sender: Sender<String>,
 }
 
-pub async fn initiate_webserver(
-    db: Arc<DB>,
-    templates: Arc<Templates<'static>>,
-    donation_sender: Sender<String>,
-) {
+pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<String>) {
     let state = Arc::new(SharedState {
         db,
-        templates,
         donation_sender,
     });
     let app = Router::new()
         .nest_service("/assets", ServeDir::new("assets"))
+        .nest_service("/", ServeDir::new("pages"))
         .route("/ws", get(ws_handler))
-        .route("/celebrated/:id", get(set_celebration))
-        .route("/", get(send_page))
         .with_state(state);
 
     let addr = SocketAddr::from((

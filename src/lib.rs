@@ -4,14 +4,8 @@ use sqlx::FromRow;
 
 pub mod db;
 pub mod discord;
-pub mod templates;
 pub mod webserver;
 pub mod websocket;
-
-use once_cell::sync::Lazy;
-
-static SERVER_URL: Lazy<String> =
-    Lazy::new(|| std::env::var("SERVER_URL").expect("SERVER_URL environment variable is not set."));
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Default, Clone)]
 pub struct Donation {
@@ -32,47 +26,22 @@ impl Donation {
 }
 
 #[derive(Serialize)]
-pub struct TemplateData {
-    top: Vec<Donation>,
-    latest: Vec<Donation>,
-    total: f32,
-    server_url: String,
+pub struct DonationData {
+    top_donations: Vec<Donation>,
+    latest_donations: Vec<Donation>,
+    pricepool: f32,
 }
 
-impl TemplateData {
+impl DonationData {
     pub fn new(raw_donations: &[Donation]) -> Self {
-        let total = total_amount(raw_donations);
-        let top = aggregate_donations(raw_donations);
-        let latest = sort_by_date(raw_donations);
+        let pricepool = total_amount(raw_donations);
+        let top_donations = aggregate_donations(raw_donations);
+        let latest_donations = sort_by_date(raw_donations);
 
         Self {
-            top,
-            latest,
-            total,
-            server_url: SERVER_URL.clone(),
-        }
-    }
-}
-
-#[derive(Serialize)]
-pub struct CelebrationData {
-    donation: Donation,
-    total: f32,
-    server_url: String,
-}
-
-impl CelebrationData {
-    pub fn new(raw_donations: &[Donation]) -> Option<Self> {
-        let celebrated_donation = get_celebrateable(&raw_donations);
-        if let Some(donation) = celebrated_donation {
-            let total = total_amount(raw_donations);
-            Some(Self {
-                total,
-                donation,
-                server_url: SERVER_URL.clone(),
-            })
-        } else {
-            None
+            pricepool,
+            top_donations,
+            latest_donations,
         }
     }
 }
@@ -110,12 +79,3 @@ pub fn aggregate_donations(donations: &[Donation]) -> Vec<Donation> {
     });
     sort_by_amount(&return_vec)
 }
-
-pub fn get_celebrateable(donations: &[Donation]) -> Option<Donation> {
-    donations
-        .iter()
-        .find(|donation| !donation.celebrated)
-        .cloned()
-}
-
-pub struct WsData {}
