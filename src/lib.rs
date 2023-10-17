@@ -6,6 +6,7 @@ pub mod db;
 pub mod discord;
 pub mod templates;
 pub mod webserver;
+pub mod websocket;
 
 use once_cell::sync::Lazy;
 
@@ -116,3 +117,5 @@ pub fn get_celebrateable(donations: &[Donation]) -> Option<Donation> {
         .find(|donation| !donation.celebrated)
         .cloned()
 }
+
+pub struct WsData {}

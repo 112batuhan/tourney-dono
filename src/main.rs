@@ -1,10 +1,10 @@
 use std::sync::Arc;
-use tokio::task;
 
+use tokio::sync::broadcast;
+use tokio::task;
 use tourney_dono::db::DB;
-use tourney_dono::discord;
 use tourney_dono::templates::Templates;
-use tourney_dono::webserver;
+use tourney_dono::{discord, webserver};
 
 #[tokio::main]
 async fn main() {
@@ -20,17 +20,19 @@ async fn main() {
     let templates = Templates::new();
     let templates = Arc::new(templates);
 
-    let dc_db = db.clone();
+    let (donation_sender, _receiver) = broadcast::channel::<String>(16);
 
+    let dc_donation_sender = donation_sender.clone();
+    let dc_db = db.clone();
     let allowed_users = db.get_admins().await.unwrap();
     task::spawn(async move {
-        discord::initiate_dc_bot(dc_db, allowed_users)
+        discord::initiate_dc_bot(dc_db, allowed_users, dc_donation_sender)
             .await
             .unwrap();
     });
 
     task::spawn(async move {
-        webserver::initiate_webserver(db, templates).await;
+        webserver::initiate_webserver(db, templates, donation_sender).await;
     })
     .await
     .unwrap();

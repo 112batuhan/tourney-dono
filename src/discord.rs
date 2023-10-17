@@ -9,6 +9,7 @@ use serenity::model::gateway::Ready;
 use serenity::model::prelude::Message;
 use serenity::prelude::{Context, EventHandler, GatewayIntents, TypeMapKey};
 use serenity::{async_trait, Client};
+use tokio::sync::broadcast::Sender;
 
 use crate::db::DB;
 use crate::TemplateData;
@@ -20,6 +21,10 @@ impl TypeMapKey for DbKey {
 pub struct AllowedUsersKey;
 impl TypeMapKey for AllowedUsersKey {
     type Value = Vec<u64>;
+}
+pub struct BroadcastSenderKey;
+impl TypeMapKey for BroadcastSenderKey {
+    type Value = Sender<String>;
 }
 
 #[hook]
@@ -36,8 +41,12 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
 
     {
         let data = ctx.data.read().await;
-        let db = data.get::<DbKey>().unwrap().clone();
+        let db = data.get::<DbKey>().unwrap();
         db.add_donation(&donor, &amount).await?;
+        let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
+        broadcast_sender
+            .send("new dono placeholder!!".to_string())
+            .unwrap();
     }
 
     let response_message = format!("Donation added: {} - {} units!", donor, amount);
@@ -51,7 +60,7 @@ pub async fn remove(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
 
     {
         let data = ctx.data.read().await;
-        let db = data.get::<DbKey>().unwrap().clone();
+        let db = data.get::<DbKey>().unwrap();
         db.delete_donation(donor).await?
     }
 
@@ -101,7 +110,11 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     {
         let data = ctx.data.read().await;
         let db = data.get::<DbKey>().unwrap().clone();
-        db.set_celebration(donor, false).await?
+        db.set_celebration(donor, false).await?;
+        let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
+        broadcast_sender
+            .send("new dono placeholder!!".to_string())
+            .unwrap();
     }
 
     let response_message = format!("Donation set to be celebrated again: {}", donor);
@@ -123,7 +136,11 @@ impl EventHandler for Handler {
     }
 }
 
-pub async fn initiate_dc_bot(db_instance: Arc<DB>, allowed_users: Vec<u64>) -> Result<()> {
+pub async fn initiate_dc_bot(
+    db_instance: Arc<DB>,
+    allowed_users: Vec<u64>,
+    donation_broadcast_sender: Sender<String>,
+) -> Result<()> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     let framework = StandardFramework::new()
@@ -144,6 +161,7 @@ pub async fn initiate_dc_bot(db_instance: Arc<DB>, allowed_users: Vec<u64>) -> R
         let mut data = client.data.write().await;
         data.insert::<DbKey>(db_instance);
         data.insert::<AllowedUsersKey>(allowed_users);
+        data.insert::<BroadcastSenderKey>(donation_broadcast_sender);
     }
 
     client
