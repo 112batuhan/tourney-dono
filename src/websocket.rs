@@ -17,12 +17,13 @@ async fn send_donations(
     socket_sender: &mut SplitSink<WebSocket, Message>,
     socket_addr: &SocketAddr,
     db: Arc<DB>,
+    id_of_donated: Option<i64>,
 ) -> Result<()> {
     let donations = db
         .get_donations()
         .await
         .context("Database error while fetching data.")?;
-    let json_string = DonationData::new(&donations)
+    let json_string = DonationData::new(&donations, id_of_donated)
         .get_json_string()
         .context("Failed to parse donation data.")?;
     socket_sender
@@ -35,12 +36,12 @@ async fn send_donations(
 pub async fn handle_socket(
     socket: WebSocket,
     socket_addr: SocketAddr,
-    mut donation_receiver: Receiver<()>,
+    mut donation_receiver: Receiver<Option<i64>>,
     db: Arc<DB>,
 ) {
     let (mut socket_sender, mut socket_receiver) = socket.split();
     // Send when a new connection is established
-    if let Err(err) = send_donations(&mut socket_sender, &socket_addr, db.clone()).await {
+    if let Err(err) = send_donations(&mut socket_sender, &socket_addr, db.clone(), None).await {
         error!("Error while sending donation: {}", err)
     }
 
@@ -55,9 +56,9 @@ pub async fn handle_socket(
                     break;
                 }
 
-                _new_donation = donation_receiver.recv() => {
-                    if let Ok(_) = _new_donation{
-                        if let Err(err) = send_donations(&mut socket_sender, &moving_socket_addr, db.clone()).await
+                new_donation = donation_receiver.recv() => {
+                    if let Ok(id_of_donated) = new_donation{
+                        if let Err(err) = send_donations(&mut socket_sender, &moving_socket_addr, db.clone(), id_of_donated).await
                         {
                             error!("Error while sending donation: {}", err);
                         }

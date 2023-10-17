@@ -58,10 +58,10 @@ async fn ws_handler(
 
 pub struct SharedState {
     db: Arc<DB>,
-    donation_sender: Sender<()>,
+    donation_sender: Sender<Option<i64>>,
 }
 
-pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<()>) {
+pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<Option<i64>>) {
     let state = Arc::new(SharedState {
         db,
         donation_sender,

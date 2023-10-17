@@ -48,6 +48,18 @@ impl DB {
         Ok(())
     }
 
+    pub async fn get_donation_by_id(&self, id: i64) -> Result<Donation> {
+        let donation = sqlx::query_as!(
+            Donation,
+            "SELECT id, donor, amount, donated_at FROM donations Where id = $1",
+            id
+        )
+        .fetch_one(&self.con)
+        .await?;
+
+        Ok(donation)
+    }
+
     pub async fn get_donations(&self) -> Result<Vec<Donation>> {
         let donations = sqlx::query_as!(
             Donation,

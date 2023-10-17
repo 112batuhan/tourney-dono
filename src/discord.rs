@@ -24,7 +24,7 @@ impl TypeMapKey for AllowedUsersKey {
 }
 pub struct BroadcastSenderKey;
 impl TypeMapKey for BroadcastSenderKey {
-    type Value = Sender<()>;
+    type Value = Sender<Option<i64>>;
 }
 
 #[hook]
@@ -42,9 +42,9 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
     {
         let data = ctx.data.read().await;
         let db = data.get::<DbKey>().unwrap();
-        db.add_donation(&donor, &amount).await?;
+        let added_donation = db.add_donation(&donor, &amount).await?;
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
-        broadcast_sender.send(()).ok();
+        broadcast_sender.send(Some(added_donation.id)).ok();
     }
 
     let response_message = format!("Donation added: {} - {} units!", donor, amount);
@@ -75,7 +75,7 @@ pub async fn all(ctx: &Context, msg: &Message) -> CommandResult {
         db.get_donations().await?
     };
 
-    let data = DonationData::new(&donations);
+    let data = DonationData::new(&donations, None);
 
     let display_msg = data
         .individual_donations
@@ -102,11 +102,13 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
 
     {
         let data = ctx.data.read().await;
+        let db = data.get::<DbKey>().unwrap();
+        let donation_from_db = db.get_donation_by_id(donor).await?;
         let broadcast_sender = data.get::<BroadcastSenderKey>().unwrap();
-        broadcast_sender.send(()).ok();
+        broadcast_sender.send(Some(donation_from_db.id)).ok();
     }
 
-    let response_message = format!("Donation set to be   again: {}", donor);
+    let response_message = format!("Donation set to be celebrated again: {}", donor);
     msg.channel_id.say(&ctx.http, response_message).await?;
 
     Ok(())
@@ -128,7 +130,7 @@ impl EventHandler for Handler {
 pub async fn initiate_dc_bot(
     db_instance: Arc<DB>,
     allowed_users: Vec<u64>,
-    donation_broadcast_sender: Sender<()>,
+    donation_broadcast_sender: Sender<Option<i64>>,
 ) -> Result<()> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 

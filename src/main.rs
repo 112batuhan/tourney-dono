@@ -16,7 +16,7 @@ async fn main() {
     let db = DB::new().await.unwrap();
     let db = Arc::new(db);
 
-    let (donation_sender, _receiver) = broadcast::channel::<()>(1);
+    let (donation_sender, _receiver) = broadcast::channel::<Option<i64>>(1);
 
     let dc_donation_sender = donation_sender.clone();
     let dc_db = db.clone();

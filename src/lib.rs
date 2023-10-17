@@ -27,18 +27,20 @@ impl Donation {
 
 #[derive(Serialize)]
 pub struct DonationData {
+    id_of_celebrated: Option<i64>,
     aggregate_donations: Vec<Donation>,
     individual_donations: Vec<Donation>,
     pricepool: f32,
 }
 
 impl DonationData {
-    pub fn new(raw_donations: &[Donation]) -> Self {
+    pub fn new(raw_donations: &[Donation], id_of_celebrated: Option<i64>) -> Self {
         let pricepool = total_amount(raw_donations);
         let aggregate_donations = aggregate_donations(raw_donations);
         let individual_donations = sort_by_date(raw_donations);
 
         Self {
+            id_of_celebrated,
             pricepool,
             aggregate_donations,
             individual_donations,
