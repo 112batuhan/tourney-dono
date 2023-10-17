@@ -109,7 +109,7 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         broadcast_sender.send(Some(donation_from_db.id)).ok();
     }
 
-    let response_message = format!("Donation set to be celebrated again: {}", donor);
+    let response_message = format!("Celebration triggererd for donation with id: {} ", donor);
     msg.channel_id.say(&ctx.http, response_message).await?;
 
     Ok(())
@@ -117,28 +117,25 @@ pub async fn celebrate(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
 
 // WIP
 #[command]
-pub async fn bulkadd(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let donor = args.single::<String>()?;
+pub async fn bulkadd(ctx: &Context, msg: &Message) -> CommandResult {
+    dbg!(&msg.content[8..]);
 
-    let donation_iter = donor
+    let donation_iter = msg.content[8..]
         .split('\n')
-        .map(|line| {
-            line.split_whitespace()
-                .collect_tuple::<(&str, &str)>()
-                .unwrap()
-        })
-        .map(|(donor, amount_str)| (donor, amount_str.parse::<f32>().unwrap()));
+        .filter_map(|line| line.split(',').collect_tuple::<(&str, &str)>())
+        .map(|(donor, amount_str)| (donor.trim(), amount_str.trim().parse::<f32>().unwrap()));
 
     {
         let data = ctx.data.read().await;
         let db = data.get::<DbKey>().unwrap();
 
         for (donor, amount) in donation_iter {
+            dbg!(&donor, &amount);
             db.add_donation(donor, &amount).await?;
         }
     }
 
-    let response_message = format!("Donation set to be celebrated again: {}", donor);
+    let response_message = format!("Donations have been added in bulk.");
     msg.channel_id.say(&ctx.http, response_message).await?;
 
     Ok(())
