@@ -37,7 +37,7 @@ async fn before(ctx: &Context, msg: &Message, _: &str) -> bool {
 
 #[command]
 pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let donor = args.single::<String>()?;
+    let donor = args.single::<String>()?.replace("\"", "");
     let amount = args.single::<f32>()?;
 
     {
