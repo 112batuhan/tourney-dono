@@ -45,8 +45,13 @@ const { data } = useWebSocket(config.public.wsUrl, {
       </Transition>
     </div>
 
-    <div>
-      <h1>Aggregate Donations</h1>
+    <div class="relative grid grid-cols-2 items-center font-bold h-24 aspect-[434/96]">
+      <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
+
+      <div class="flex justify-center pt-4 pr-6">
+        <p class="text-2xl">500tl</p>
+      </div>
+
       <TransitionGroup
         enterActiveClass="transition-all duration-500"
         leaveActiveClass="transition-all duration-500"
@@ -54,6 +59,7 @@ const { data } = useWebSocket(config.public.wsUrl, {
         leaveToClass="absolute translate-y-full opacity-0"
         enterFromClass="translate-x-full opacity-0"
         tag="ol"
+        class="text-white"
       >
         <li
           v-for="donation in message?.aggregate_donations.slice(0, 3)"
