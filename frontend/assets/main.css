@@ -1,0 +1,15 @@
+@font-face {
+  font-family: "Torus";
+  src: url("./Torus.otf")
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities; 
+
+@layer base {
+  html, body {
+    font-family: Torus;
+    @apply text-white;
+  }
+}
