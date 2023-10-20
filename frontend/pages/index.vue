@@ -8,7 +8,7 @@ const { message } = useDonations();
   >
     <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
 
-    <div class="flex justify-center pt-5 pr-6 text-white">
+    <div v-if="message.pricepool" class="flex justify-center pt-5 pr-6 text-white">
       <p class="text-2xl">{{ message.pricepool.toLocaleString() }}tl</p>
     </div>
 
