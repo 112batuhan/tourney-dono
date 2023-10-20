@@ -1,17 +1,15 @@
 <script setup lang="ts">
-const { message, celebrationDonation } = useDonations();
+const { message } = useDonations();
 </script>
 
 <template>
   <div
     class="relative grid grid-cols-2 items-center font-bold h-24 aspect-[434/96]"
   >
-    <p>{{celebrationDonation }}</p>
-
     <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
 
     <div class="flex justify-center pt-5 pr-6 text-white">
-      <p class="text-2xl">{{ celebrationDonation }}tl</p>
+      <p class="text-2xl">{{ message.pricepool.toLocaleString() }}tl</p>
     </div>
 
     <TransitionGroup
