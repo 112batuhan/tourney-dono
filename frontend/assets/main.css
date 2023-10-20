@@ -10,6 +10,6 @@
 @layer base {
   html, body {
     font-family: Torus;
-    @apply text-white;
+    @apply text-white overflow-hidden;
   }
 }
