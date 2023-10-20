@@ -2,7 +2,7 @@ import { Message } from "~/models/message";
 import { Donation } from "~/models/donation";
 
 export const useDonations = () => {
-  const message = useState<Message>();
+  const message = useState<Message | undefined>();
   const celebrationDonation = refAutoReset<Donation | undefined>(
     undefined,
     7000
@@ -10,7 +10,7 @@ export const useDonations = () => {
   const celebrationDonationDonorTotal = useState<number | undefined>();
 
   const config = useRuntimeConfig();
-  const { data } = useWebSocket(config.public.wsUrl, {
+  const { data, status } = useWebSocket(config.public.wsUrl, {
     onMessage: () => {
       message.value = JSON.parse(data.value);
 
@@ -31,6 +31,7 @@ export const useDonations = () => {
   return {
     message,
     celebrationDonation,
-    celebrationDonationDonorTotal
+    celebrationDonationDonorTotal,
+    status
   }
 };
