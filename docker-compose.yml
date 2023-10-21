@@ -17,7 +17,7 @@ services:
   tourney-dono:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
       args:
         - DATABASE_URL=${DATABASE_URL}
         - PORT=${PORT}
