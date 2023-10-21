@@ -5,14 +5,35 @@ services:
     restart: always
     ports:
       - "5432:5432"
-    profiles:
-      - all
-      - postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-
+      POSTGRES_DB: postgres
     volumes:
       - local_pgdata:/var/lib/postgresql/data
+    networks:
+      - tourney-dono-local-network
+
+  tourney-dono:
+    build:
+      context: .
+      dockerfile: dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
+        - PORT=${PORT}
+        - DISCORD_TOKEN=${DISCORD_TOKEN}
+        - WS_URL=${WS_URL}
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - tourney-dono-local-network
+
 volumes:
   local_pgdata:
+    driver: local
+
+networks:
+  tourney-dono-local-network:
+    driver: bridge

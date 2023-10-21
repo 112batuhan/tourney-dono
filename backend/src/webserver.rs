@@ -67,8 +67,7 @@ pub async fn initiate_webserver(db: Arc<DB>, donation_sender: Sender<Option<i64>
         donation_sender,
     });
     let app = Router::new()
-        .nest_service("/assets", ServeDir::new("assets"))
-        .nest_service("/", ServeDir::new("pages"))
+        .nest_service("/", ServeDir::new("public"))
         .route("/ws", get(ws_handler))
         .with_state(state);
 

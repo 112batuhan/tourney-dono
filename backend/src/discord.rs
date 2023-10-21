@@ -37,7 +37,7 @@ async fn before(ctx: &Context, msg: &Message, _: &str) -> bool {
 
 #[command]
 pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let donor = args.single::<String>()?.replace("\"", "");
+    let donor = args.single::<String>()?.replace('\"', "");
     let amount = args.single::<f32>()?;
 
     {
@@ -132,7 +132,7 @@ pub async fn bulkadd(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    let response_message = format!("Donations have been added in bulk.");
+    let response_message = "Donations have been added in bulk.".to_string();
     msg.channel_id.say(&ctx.http, response_message).await?;
 
     Ok(())

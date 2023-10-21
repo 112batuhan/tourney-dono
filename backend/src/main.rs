@@ -1,3 +1,5 @@
+#![warn(unused_extern_crates)]
+
 use std::sync::Arc;
 
 use tokio::sync::broadcast;
@@ -21,15 +23,12 @@ async fn main() {
     let dc_donation_sender = donation_sender.clone();
     let dc_db = db.clone();
     let allowed_users = db.get_admins().await.unwrap();
+
     task::spawn(async move {
         discord::initiate_dc_bot(dc_db, allowed_users, dc_donation_sender)
             .await
             .unwrap();
     });
 
-    task::spawn(async move {
-        webserver::initiate_webserver(db, donation_sender).await;
-    })
-    .await
-    .unwrap();
+    webserver::initiate_webserver(db, donation_sender).await;
 }
