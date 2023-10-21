@@ -13,7 +13,8 @@ FROM node:latest as nuxt-builder
 WORKDIR /usr/src/tourney-dono
 COPY frontend .
 ARG WS_URL=${WS_URL}
-RUN npm install & npm run generate
+RUN npm install
+RUN npm run generate
 
 
 # I cant be bothered with libssl.so.3 error 
