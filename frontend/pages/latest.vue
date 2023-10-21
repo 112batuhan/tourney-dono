@@ -16,7 +16,7 @@ const { celebrationDonation, celebrationDonationDonorTotal } = useDonations();
         <img src="~/assets/cocuk_sadece_alkis.gif" width="124" height="105" />
       </div>
     </Transition>
-  
+
     <Transition
       enterActiveClass="transition-all duration-500"
       leaveActiveClass="transition-all duration-500 delay-500"
@@ -25,15 +25,25 @@ const { celebrationDonation, celebrationDonationDonorTotal } = useDonations();
     >
       <div
         v-if="celebrationDonation"
-        class="bg-[url('~/assets/bagis_tahta.png')] z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
+        class="bg-[url('~/assets/bagis_tahta.png')] gap-2 text-center z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
       >
-        <h1>Latest Donation</h1>
-        <p>
-          {{ celebrationDonation.donor }} {{ celebrationDonation.amount }}
+        <p class="text-xl font-semibold">Yeni okul katkı payı ödemesi</p>
+
+        <div>
+          <p class="text-lg font-semibold">
+            {{ celebrationDonation.donor }} {{ celebrationDonation.amount }} TL
+          </p>
+          <p v-if="celebrationDonationDonorTotal" class="text-sm">
+            Toplam: {{ celebrationDonationDonorTotal }} TL
+          </p>
+        </div>
+
+        <!-- <p>
+          {{ celebrationDonation.donor }} {{ celebrationDonation.amount }} TL
           <span v-if="celebrationDonationDonorTotal">
-            - Total: {{ celebrationDonationDonorTotal }}
+            Toplam: {{ celebrationDonationDonorTotal }} TL
           </span>
-        </p>
+        </p> -->
       </div>
     </Transition>
   </div>
