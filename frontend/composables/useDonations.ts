@@ -5,7 +5,7 @@ export const useDonations = () => {
   const message = useState<Message | undefined>();
   const celebrationDonation = refAutoReset<Donation | undefined>(
     undefined,
-    7_000
+    20_000
   );
 
   const config = useRuntimeConfig();

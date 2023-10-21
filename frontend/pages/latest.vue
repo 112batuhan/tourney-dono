@@ -1,5 +1,13 @@
 <script setup lang="ts">
+import zil from "~/assets/eba-zil.mp3";
+
 const { celebrationDonation } = useDonations();
+
+watchEffect(() => {
+  if (!celebrationDonation.value) return;
+  const audio = new Audio(zil);
+  audio.play();
+})
 </script>
 
 <template>
