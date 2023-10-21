@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { celebrationDonation, celebrationDonationDonorTotal } = useDonations();
+const { celebrationDonation } = useDonations();
 </script>
 
 <template>
@@ -27,23 +27,11 @@ const { celebrationDonation, celebrationDonationDonorTotal } = useDonations();
         v-if="celebrationDonation"
         class="bg-[url('~/assets/bagis_tahta.png')] gap-2 text-center z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
       >
-        <p class="text-xl font-semibold">Yeni okul katkı payı ödemesi</p>
+        <p class="font-semibold">Yeni okul katkı payı ödemesi</p>
 
-        <div>
-          <p class="text-lg font-semibold">
-            {{ celebrationDonation.donor }} {{ celebrationDonation.amount }} TL
-          </p>
-          <p v-if="celebrationDonationDonorTotal" class="text-sm">
-            Toplam: {{ celebrationDonationDonorTotal }} TL
-          </p>
-        </div>
-
-        <!-- <p>
+        <p class="text-xl font-semibold">
           {{ celebrationDonation.donor }} {{ celebrationDonation.amount }} TL
-          <span v-if="celebrationDonationDonorTotal">
-            Toplam: {{ celebrationDonationDonorTotal }} TL
-          </span>
-        </p> -->
+        </p>
       </div>
     </Transition>
   </div>
