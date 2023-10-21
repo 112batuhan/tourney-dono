@@ -1,5 +1,11 @@
 <script setup lang="ts">
 const { message, status } = useDonations();
+
+const filteredDonations = computed(() =>
+  message.value?.aggregate_donations
+    .filter((donation) => donation.donor !== "heyronii")
+    .slice(0, 3)
+);
 </script>
 
 <template>
@@ -27,14 +33,7 @@ const { message, status } = useDonations();
       class="text-white"
       @beforeLeave="beforeLeave"
     >
-      <li
-        v-for="donation in message?.aggregate_donations
-          .filter((object) => {
-            return object.donor !== 'heyronii';
-          })
-          .slice(0, 3)"
-        :key="donation.id"
-      >
+      <li v-for="donation in filteredDonations" :key="donation.id">
         <p>{{ donation.donor }} - {{ donation.amount }} TL</p>
       </li>
     </TransitionGroup>

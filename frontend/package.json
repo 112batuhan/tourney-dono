@@ -17,8 +17,5 @@
     "nuxt": "^3.7.4",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5"
-  },
-  "dependencies": {
-    "@vueuse/sound": "^2.0.1"
   }
 }
