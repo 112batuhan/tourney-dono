@@ -7,8 +7,8 @@ use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use tokio::select;
 use tokio::sync::broadcast::Receiver;
-use tokio::sync::oneshot;
-use tracing::{error, info, warn};
+use tokio::sync::mpsc;
+use tracing::{debug, error, info, warn};
 
 use crate::db::DB;
 use crate::DonationData;
@@ -45,16 +45,23 @@ pub async fn handle_socket(
         error!("Error while sending donation: {}", err)
     }
 
-    let (oneshot_sender, mut oneshot_receiver) = oneshot::channel::<()>();
+    let (mpsc_sender, mut mpsc_receiver) = mpsc::channel::<()>(3);
     let moving_socket_addr = socket_addr;
 
-    // send data when a new donation is triggered
+    // send data when a new donation is triggered and respond to ping.
     tokio::task::spawn(async move {
         loop {
             select! {
-                // closing this task when main handler is returned
-                _msg = &mut oneshot_receiver => {
-                    break;
+
+                client_message = mpsc_receiver.recv() =>{
+                    if let Some(_) = client_message{
+                        if let Err(err) = socket_sender.send(Message::Text("pong".to_string())).await{
+                            error!("Error while sending Pong: {}", err);
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
                 }
 
                 new_donation = donation_receiver.recv() => {
@@ -70,17 +77,19 @@ pub async fn handle_socket(
     });
 
     loop {
-        // listen for closing message
         if let Some(msg) = socket_receiver.next().await {
             if let Ok(msg) = msg {
+                debug!("incoming message {:?} from {}", msg, socket_addr);
                 if let Message::Close(close_message) = msg {
                     info!(
                         "Closing the connection of {}: {:?}",
                         socket_addr, close_message
                     );
-                    // send closing signal to donation update task
-                    oneshot_sender.send(()).ok();
                     return;
+                } else if let Message::Text(text_content) = msg {
+                    if text_content == "ping" {
+                        mpsc_sender.send(()).await.ok();
+                    }
                 }
             } else {
                 warn!("Connection of {} got abruptly closed", socket_addr);

@@ -11,10 +11,11 @@ export const useDonations = () => {
   const config = useRuntimeConfig();
   const { data, status } = useWebSocket(config.public.wsUrl, {
     autoReconnect: {
-      retries: 3
+      retries: 3,
     },
     heartbeat: {
-      interval: 5000
+      interval: 60_000,
+      pongTimeout: 5000,
     },
     onMessage: () => {
       message.value = JSON.parse(data.value);
@@ -31,6 +32,6 @@ export const useDonations = () => {
   return {
     message,
     celebrationDonation,
-    status
-  }
+    status,
+  };
 };
