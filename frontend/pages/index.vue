@@ -10,7 +10,10 @@ const { message, status } = useDonations();
   >
     <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
 
-    <div v-if="message?.pricepool" class="flex justify-center pt-5 pr-6 text-white">
+    <div
+      v-if="message?.pricepool"
+      class="flex justify-center pt-5 pr-6 text-white"
+    >
       <p class="text-2xl">{{ message.pricepool.toLocaleString() }}tl</p>
     </div>
 
@@ -25,7 +28,11 @@ const { message, status } = useDonations();
       @beforeLeave="beforeLeave"
     >
       <li
-        v-for="donation in message?.aggregate_donations.slice(0, 3)"
+        v-for="donation in message?.aggregate_donations
+          .filter((object) => {
+            return object.donor !== 'heyronii';
+          })
+          .slice(0, 3)"
         :key="donation.id"
       >
         <p>{{ donation.donor }} - {{ donation.amount }} TL</p>
