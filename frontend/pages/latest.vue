@@ -33,12 +33,13 @@ watchEffect(() => {
     >
       <div
         v-if="celebrationDonation"
-        class="bg-[url('~/assets/bagis_tahta.png')] gap-2 text-center z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
+        class="bg-[url('~/assets/bagis_tahta.png')] gap- text-center z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
       >
-        <p class="font-semibold text-3xl">Yeni okul katki payi ödemesi</p>
+        <p class="font-semibold text-2xl mx-3 mt-1">Yeni okul katki payi ödemesi</p>
 
-        <p class="font-semibold text-3xl">
-          {{ celebrationDonation.donor }} : {{ celebrationDonation.amount }} TL
+        <p class="font-semibold text-2xl">
+          {{ celebrationDonation.donor }} :
+          {{ Math.round(celebrationDonation.amount) }} TL
         </p>
       </div>
     </Transition>

@@ -19,7 +19,7 @@ const lastDonation = computed(
   <p v-if="status === 'CONNECTING'" class="text-black">Loading</p>
   <div
     v-else-if="status === 'OPEN'"
-    class="relative grid grid-cols-2 font-bold h-24 aspect-[434/96]"
+    class="relative grid grid-cols-2 h-24 aspect-[434/96]"
   >
     <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
     <div
@@ -28,7 +28,7 @@ const lastDonation = computed(
     >
       <p class="text-3xl text-purple-300">Ödül Havuzu</p>
       <p class="text-2xl -mt-1 text-yellow-500">
-        {{ message.pricepool.toLocaleString() }}TL
+        {{ message.pricepool.toLocaleString().replace(",", "‚") }}TL
       </p>
     </div>
 
@@ -41,13 +41,9 @@ const lastDonation = computed(
           </div>
         </div>
 
-        <div
-          v-for="(donation, index) in filteredDonations"
-          :key="donation.id"
-          class="text-xl -my-[.1em]"
-        >
-          <span>{{ index + 1 }}.</span>
-          {{ donation.donor }} - {{ donation.amount }} TL
+        <div v-for="(donation, index) in filteredDonations" :key="donation.id">
+          <span>{{ index + 1 }}-</span>
+          {{ donation.donor }} {{ Math.round(donation.amount) }}TL
         </div>
       </div>
     </div>
@@ -56,7 +52,7 @@ const lastDonation = computed(
 
 <style>
 .scroll {
-  margin-top: 0.5em;
+  margin-top: 0.6em;
   animation-name: scroll;
   animation-duration: 30s;
   animation-iteration-count: infinite;
