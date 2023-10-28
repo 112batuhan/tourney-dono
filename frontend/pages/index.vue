@@ -74,7 +74,7 @@ const lastDonation = computed(
     transform: translateY(0);
   }
   100% {
-    transform: translateY(4.5em);
+    transform: translateY(5em);
   }
 }
 </style>
