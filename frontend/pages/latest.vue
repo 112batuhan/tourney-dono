@@ -7,7 +7,7 @@ watchEffect(() => {
   if (!celebrationDonation.value) return;
   const audio = new Audio(zil);
   audio.play();
-})
+});
 </script>
 
 <template>
@@ -35,10 +35,10 @@ watchEffect(() => {
         v-if="celebrationDonation"
         class="bg-[url('~/assets/bagis_tahta.png')] gap-2 text-center z-10 grid place-content-center aspect-[333/132] h-[132px] bg-cover"
       >
-        <p class="font-semibold">Yeni okul katkı payı ödemesi</p>
+        <p class="font-semibold text-3xl">Yeni okul katki payi ödemesi</p>
 
-        <p class="text-xl font-semibold">
-          {{ celebrationDonation.donor }} {{ celebrationDonation.amount }} TL
+        <p class="font-semibold text-3xl">
+          {{ celebrationDonation.donor }} : {{ celebrationDonation.amount }} TL
         </p>
       </div>
     </Transition>

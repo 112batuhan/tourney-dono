@@ -2,9 +2,16 @@
 const { message, status } = useDonations();
 
 const filteredDonations = computed(() =>
-  message.value?.aggregate_donations
-    .filter((donation) => donation.donor !== "heyronii")
-    .slice(0, 3)
+  message.value?.aggregate_donations.filter(
+    (donation) => donation.donor !== "heyronii"
+  )
+);
+
+const lastDonation = computed(
+  () =>
+    message.value?.individual_donations.filter(
+      (donation) => donation.donor !== "heyronii"
+    )[0]
 );
 </script>
 
@@ -12,30 +19,66 @@ const filteredDonations = computed(() =>
   <p v-if="status === 'CONNECTING'" class="text-black">Loading</p>
   <div
     v-else-if="status === 'OPEN'"
-    class="relative grid grid-cols-2 items-center font-bold h-24 aspect-[434/96]"
+    class="relative grid grid-cols-2 font-bold h-24 aspect-[434/96]"
   >
     <img src="~/assets/odul_havuzu.png" class="absolute h-24 -z-10" />
-
     <div
       v-if="message?.pricepool"
-      class="flex justify-center pt-5 pr-6 text-white"
+      class="flex flex-col justify-start text-center mt-4"
     >
-      <p class="text-2xl">{{ message.pricepool.toLocaleString() }}tl</p>
+      <p class="text-3xl text-purple-300">Ödül Havuzu</p>
+      <p class="text-2xl -mt-1 text-yellow-500">
+        {{ message.pricepool.toLocaleString() }}TL
+      </p>
     </div>
 
-    <TransitionGroup
-      enterActiveClass="transition-all duration-1000"
-      leaveActiveClass="transition-all duration-1000 absolute"
-      moveClass="transition-all duration-1000"
-      leaveToClass="translate-y-full opacity-0"
-      enterFromClass="translate-x-full opacity-0"
-      tag="ol"
-      class="text-white"
-      @beforeLeave="beforeLeave"
-    >
-      <li v-for="donation in filteredDonations" :key="donation.id">
-        <p>{{ donation.donor }} - {{ donation.amount }} TL</p>
-      </li>
-    </TransitionGroup>
+    <div class="scroll">
+      <div class="text-center">
+        <div class="text-2xl my-1">Son Bagis</div>
+        <div class="mb-20 text-xl">
+          {{ lastDonation?.donor }} - {{ lastDonation?.amount }}TL
+        </div>
+      </div>
+
+      <div
+        v-for="(donation, index) in filteredDonations"
+        :key="donation.id"
+        class="text-xl -my-[.1em]"
+      >
+        <span>{{ index + 1 }}.</span>
+        {{ donation.donor }} - {{ donation.amount }} TL
+      </div>
+    </div>
   </div>
 </template>
+
+<style>
+.scroll {
+  margin-top: 0.75em;
+  animation-name: scroll;
+  animation-duration: 30s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-out;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(-9.4em);
+  }
+  70% {
+    transform: translateY(-9.4em);
+  }
+  80% {
+    transform: translateY(0);
+  }
+  95% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4.5em);
+  }
+}
+</style>

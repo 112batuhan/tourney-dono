@@ -2,6 +2,10 @@
   font-family: "Torus";
   src: url("./Torus.otf")
 }
+@font-face {
+  font-family: "Crayon";
+  src: url("./CrayonWorks.otf")
+}
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +13,7 @@
 
 @layer base {
   html, body {
-    font-family: Torus;
+    font-family: Crayon;
     @apply text-white overflow-hidden;
   }
 }
