@@ -35,10 +35,9 @@ const lastDonation = computed(
     <div class="my-2 overflow-hidden">
       <div class="scroll">
         <div class="text-center">
-          <div class="text-2xl my-1">Son Bagis</div>
-          <div class="mb-20 text-xl">
-            {{ lastDonation?.donor }} - {{ lastDonation?.amount }}TL
-          </div>
+          <div class="text-2xl">Son Bagis</div>
+          <div class="text-xl -my-1">{{ lastDonation?.donor }}</div>
+          <div class="mb-20 text-xl">{{ lastDonation?.amount }}TL</div>
         </div>
 
         <div v-for="(donation, index) in filteredDonations" :key="donation.id">
@@ -52,7 +51,6 @@ const lastDonation = computed(
 
 <style>
 .scroll {
-  margin-top: 0.6em;
   animation-name: scroll;
   animation-duration: 30s;
   animation-iteration-count: infinite;
@@ -64,10 +62,10 @@ const lastDonation = computed(
     transform: translateY(-100%);
   }
   50% {
-    transform: translateY(-9.4em);
+    transform: translateY(-9.65em);
   }
   70% {
-    transform: translateY(-9.4em);
+    transform: translateY(-9.65em);
   }
   80% {
     transform: translateY(0);
